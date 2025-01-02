@@ -10,7 +10,7 @@ interface BlogPost {
   author: string;
 }
 
-const BlogPostPage = () => {
+const BlogDetails = () => {
   const router = useRouter();
   const { id } = router.query; // `id` is fetched dynamically from the route
   const { currentUser } = useUser();
@@ -57,4 +57,4 @@ const BlogPostPage = () => {
   );
 };
 
-export default BlogPostPage;
+export default BlogDetails;
