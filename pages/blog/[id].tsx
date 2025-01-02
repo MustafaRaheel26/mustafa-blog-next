@@ -10,35 +10,39 @@ interface BlogPost {
   author: string;
 }
 
-const BlogDetails = () => {
+const BlogPostPage = () => {
   const router = useRouter();
-  const { id } = router.query; // `id` is fetched dynamically from the route
+  const { id } = router.query; // Fetch dynamic route parameter
   const { currentUser } = useUser();
 
   const [post, setPost] = useState<BlogPost | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return; // Wait until `id` is defined
+    if (!id) return; // Ensure `id` is defined
 
-    const storedPosts: BlogPost[] = JSON.parse(localStorage.getItem("posts") || "[]");
+    // Fetch posts from localStorage
+    const storedPosts = JSON.parse(localStorage.getItem("posts") || "[]") as BlogPost[];
+
+    // Find the post with the matching `id`
     const foundPost = storedPosts.find((post) => post.id === id);
 
     if (foundPost) {
       setPost(foundPost);
     } else {
-      alert("Post not found!");
-      router.push("/"); // Redirect to home if the post isn't found
+      alert("Post not found! Redirecting to the homepage.");
+      router.push("/"); // Redirect to the homepage if the post isn't found
     }
-    setIsLoading(false); // Stop loading state
+
+    setIsLoading(false); // Stop the loading state
   }, [id, router]);
 
   if (isLoading) {
-    return <div>Loading...</div>; // Display "loading" while fetching data
+    return <div>Loading...</div>; // Show a loading indicator
   }
 
   if (!post) {
-    return <div>Post not found!</div>; // Fallback in case of missing post
+    return <div>Post not found!</div>; // Show fallback if the post is not found
   }
 
   return (
@@ -57,4 +61,4 @@ const BlogDetails = () => {
   );
 };
 
-export default BlogDetails;
+export default BlogPostPage;
