@@ -11,25 +11,34 @@ const Home = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
 
   useEffect(() => {
+    // Fetch posts from localStorage
     const storedPosts = JSON.parse(localStorage.getItem("posts") || "[]") as BlogPost[];
+    console.log("Fetched Posts from localStorage:", storedPosts); // Debugging log
     setPosts(storedPosts);
   }, []);
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="max-w-4xl mx-auto">
-        {posts.map((post) => (
-          <div key={post.id} className="bg-white p-4 rounded shadow mb-4">
-            <h2 className="text-xl font-bold">{post.title}</h2>
-            <p className="text-gray-700">{post.content.slice(0, 100)}...</p>
-            <a
-              href={`/blog/${post.id}`}
-              className="text-blue-500 hover:underline"
-            >
-              Read More
-            </a>
+        <h1 className="text-2xl font-bold mb-6 text-center">Latest Blogs</h1>
+        {posts.length === 0 ? (
+          <div className="text-center text-gray-600">
+            No blogs found! Add some posts to see them here.
           </div>
-        ))}
+        ) : (
+          posts.map((post) => (
+            <div key={post.id} className="bg-white p-4 rounded shadow mb-4">
+              <h2 className="text-xl font-bold">{post.title}</h2>
+              <p className="text-gray-700">{post.content.slice(0, 100)}...</p>
+              <a
+                href={`/blog/${post.id}`}
+                className="text-blue-500 hover:underline"
+              >
+                Read More
+              </a>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
