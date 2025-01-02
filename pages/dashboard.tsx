@@ -1,152 +1,119 @@
-import { useEffect, useState } from "react";
-import { useUser } from "../context/UserContext";
-import { useRouter } from "next/router";
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
-// Define the BlogPost interface
-interface BlogPost {
+interface Blog {
   id: string;
   title: string;
   content: string;
-  author: string;
+  image?: string;
+  email: string; // Assuming blogs have an associated user email
+}
+
+interface User {
+  name: string;
   email: string;
+  avatar: string;
 }
 
 const Dashboard = () => {
-  const { currentUser } = useUser();
   const router = useRouter();
-
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [userBlogs, setUserBlogs] = useState<Blog[]>([]);
 
   useEffect(() => {
-    if (!currentUser) {
-      router.push("/login"); // Redirect to login if the user is not logged in
-      return;
+    const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    if (!user) {
+      router.push('/login');
     }
+    setCurrentUser(user);
 
-    // Fetch the blogs created by the current user
-    const storedPosts = JSON.parse(localStorage.getItem("posts") || "[]");
-    const userPosts = storedPosts.filter(
-      (post: BlogPost) => post.email === currentUser.email
-    );
-    setPosts(userPosts);
-  }, [currentUser, router]);
-
-  const handleCreateBlog = () => {
-    if (!title || !content) {
-      alert("Title and content are required!");
-      return;
+    const allBlogs: Blog[] = JSON.parse(localStorage.getItem('blogs') || '[]');
+    if (user) {
+      setUserBlogs(allBlogs.filter((blog) => blog.email === user.email));
     }
+  }, [router]);
 
-    if (!currentUser) {
-      alert("You must be logged in to create a blog!");
-      return;
-    }
-
-    // Fetch existing blogs from localStorage
-    const storedPosts = JSON.parse(localStorage.getItem("posts") || "[]");
-
-    const newPost: BlogPost = {
-      id: Date.now().toString(),
-      title,
-      content,
-      author: currentUser.name,
-      email: currentUser.email,
-    };
-
-    // Add the new post to the existing posts
-    const updatedPosts = [...storedPosts, newPost];
-    localStorage.setItem("posts", JSON.stringify(updatedPosts));
-
-    // Update the dashboard posts
-    setPosts((prevPosts) => [...prevPosts, newPost]);
-    setTitle("");
-    setContent("");
-    alert("Blog post created successfully!");
+  const handleAddBlog = () => {
+    router.push('/add-blog');
   };
 
-  const handleDeleteBlog = (postId: string) => {
-    const storedPosts = JSON.parse(localStorage.getItem("posts") || "[]");
-    const updatedPosts = storedPosts.filter(
-      (post: BlogPost) => post.id !== postId
-    );
+  const handleDeleteBlog = (id: string) => {
+    const updatedBlogs = userBlogs.filter((blog) => blog.id !== id);
+    setUserBlogs(updatedBlogs);
 
-    // Update localStorage and state
-    localStorage.setItem("posts", JSON.stringify(updatedPosts));
-    setPosts(updatedPosts.filter((post:BlogPost) => post.email === currentUser?.email));
-    alert("Blog deleted successfully!");
+    const allBlogs: Blog[] = JSON.parse(localStorage.getItem('blogs') || '[]');
+    const updatedAllBlogs = allBlogs.filter((blog) => blog.id !== id);
+    localStorage.setItem('blogs', JSON.stringify(updatedAllBlogs));
   };
-
-  if (!currentUser) return null; // Prevent rendering if the user is not logged in
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6 text-center">
-          Welcome, {currentUser?.name}!
-        </h1>
-        <div className="bg-white p-4 rounded shadow mb-6">
-          <h2 className="text-lg font-bold mb-4">Create a New Blog</h2>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Title
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full p-2 border rounded mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter blog title"
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="bg-white rounded shadow p-6 max-w-4xl mx-auto">
+        {currentUser && (
+          <div className="flex items-center space-x-4">
+            <Image
+              src={currentUser.avatar}
+              alt="User Avatar"
+              width={64}
+              height={64}
+              className="rounded-full border border-gray-300"
             />
+            <div>
+              <h1 className="text-2xl font-bold">{currentUser.name}</h1>
+              <p className="text-gray-600">{currentUser.email}</p>
+            </div>
           </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              Content
-            </label>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="w-full p-2 border rounded mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter blog content"
-              rows={5}
-            />
-          </div>
+        )}
+
+        <div className="mt-6">
           <button
-            onClick={handleCreateBlog}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            onClick={handleAddBlog}
+            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
           >
-            Create Blog
+            Add New Blog
           </button>
         </div>
-        <h2 className="text-xl font-bold mb-4">Your Blogs</h2>
-        {posts.length === 0 ? (
-          <p className="text-gray-600">You haven&apos;t created any blogs yet.</p>
-        ) : (
-          posts.map((post: BlogPost) => (
-            <div
-              key={post.id}
-              className="bg-white p-4 rounded shadow mb-4 flex justify-between items-center"
-            >
-              <div>
-                <h3 className="text-lg font-bold">{post.title}</h3>
-                <p className="text-gray-700">{post.content.slice(0, 100)}...</p>
-                <a
-                  href={`/blog/${post.id}`}
-                  className="text-blue-500 hover:underline"
-                >
-                  Read More
-                </a>
+
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold mb-4">Your Blogs</h2>
+          {userBlogs.length > 0 ? (
+            userBlogs.map((blog) => (
+              <div key={blog.id} className="bg-gray-100 p-4 rounded mb-4 shadow">
+                {blog.image && (
+                  <Image
+                    src={blog.image}
+                    alt="Blog Image"
+                    width={640}
+                    height={160}
+                    className="rounded mb-4"
+                  />
+                )}
+                <h3 className="text-lg font-bold">{blog.title}</h3>
+                <p className="text-gray-700">{blog.content}</p>
+                <div className="flex space-x-4 mt-4">
+                  <button
+                    onClick={() => handleDeleteBlog(blog.id)}
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() => handleDeleteBlog(post.id)}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-              >
-                Delete
-              </button>
-            </div>
-          ))
-        )}
+            ))
+          ) : (
+            <p className="text-gray-600">You have no blogs yet.</p>
+          )}
+        </div>
+
+        <div className="mt-6">
+          <button
+            onClick={() => router.push('/')}
+            className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+          >
+            Go to Home Page
+          </button>
+        </div>
       </div>
     </div>
   );

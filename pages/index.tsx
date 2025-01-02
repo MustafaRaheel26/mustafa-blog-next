@@ -5,7 +5,6 @@ interface BlogPost {
   title: string;
   content: string;
   author: string;
-  email: string;
 }
 
 const Home = () => {
@@ -13,8 +12,8 @@ const Home = () => {
 
   useEffect(() => {
     // Fetch posts from localStorage
-    const storedPosts = JSON.parse(localStorage.getItem("posts") || "[]");
-    console.log("Posts from localStorage:", storedPosts); // Debugging
+    const storedPosts = JSON.parse(localStorage.getItem("posts") || "[]") as BlogPost[];
+    console.log("Fetched Posts from localStorage:", storedPosts); // Debugging log
     setPosts(storedPosts);
   }, []);
 
