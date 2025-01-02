@@ -1,88 +1,47 @@
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import CommentSection from '../../components/CommentSection';
-import Image from 'next/image'; // Import Image component
+// pages/blog/[id].tsx
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import CommentSection from "../../components/CommentSection";
+import { useUser } from "../../context/UserContext";
 
-// Define interfaces for Blog and User
-interface Blog {
+interface BlogPost {
   id: string;
   title: string;
   content: string;
-  image?: string;
-  avatar: string;
   author: string;
-  createdAt: string;
 }
 
-interface User {
-  name: string;
-  avatar: string;
-}
-
-const BlogDetails = () => {
+const BlogPostPage = () => {
   const router = useRouter();
   const { id } = router.query;
+  const { currentUser } = useUser();
 
-  const [blog, setBlog] = useState<Blog | null>(null);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [post, setPost] = useState<BlogPost | null>(null);
 
   useEffect(() => {
-    // Get the current logged-in user
-    const storedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-    setCurrentUser(storedUser);
-
-    if (id) {
-      const storedBlogs: Blog[] = JSON.parse(localStorage.getItem('blogs') || '[]');
-      const foundBlog = storedBlogs.find((blog) => blog.id === id);
-      setBlog(foundBlog || null);
-    }
+    const storedPosts: BlogPost[] = JSON.parse(localStorage.getItem("posts") || "[]");
+    const foundPost = storedPosts.find((post) => post.id === id);
+    setPost(foundPost || null);
   }, [id]);
 
-  if (!blog) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <h1 className="text-2xl text-gray-700">Blog not found!</h1>
-      </div>
-    );
+  if (!post) {
+    return <div>Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          {blog.image && (
-            <Image
-              src={blog.image}
-              alt={blog.title}
-              className="w-full h-64 object-cover"
-              width={1000}  // You can specify width
-              height={400}  // You can specify height
-            />
-          )}
-          <div className="p-6">
-            <h1 className="text-4xl font-bold mb-4">{blog.title}</h1>
-            <p className="text-gray-700 text-lg mb-6">{blog.content}</p>
-            <div className="flex items-center mb-4">
-              <Image
-                src={blog.avatar}
-                alt={blog.author}
-                className="w-10 h-10 rounded-full mr-3"
-                width={40}  // Specify width for avatar
-                height={40} // Specify height for avatar
-              />
-              <div>
-                <p className="font-medium">{blog.author}</p>
-                <p className="text-sm text-gray-500">
-                  {new Date(blog.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gray-100 p-4">
+      <div className="max-w-4xl mx-auto bg-white p-6 rounded shadow">
+        <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
+        <p className="text-gray-700">{post.content}</p>
+        <div className="mt-6 border-t pt-4">
+          <h2 className="text-lg font-semibold">Author: {post.author}</h2>
         </div>
-        <CommentSection blogId={id as string} currentUser={currentUser} />
+        <div className="mt-6">
+          <CommentSection blogId={id as string} currentUser={currentUser} />
+        </div>
       </div>
     </div>
   );
 };
 
-export default BlogDetails;
+export default BlogPostPage;

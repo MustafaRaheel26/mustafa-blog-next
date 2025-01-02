@@ -1,13 +1,22 @@
+// components/CommentSection.tsx
 import { useState, useEffect } from "react";
 import Image from "next/image";
 
-interface CommentSectionProps {
-  blogId: string | string[] | undefined;
-  currentUser?: { name: string; avatar: string; email: string } | null;
-  postOwnerEmail?: string; // Post owner's email to allow comment deletion
+interface Comment {
+  id: number;
+  text: string;
+  author: string;
+  avatar: string;
+  createdAt: string;
+  email?: string;
 }
 
-const CommentSection = ({ blogId, currentUser, postOwnerEmail }: CommentSectionProps) => {
+interface CommentSectionProps {
+  blogId: string | string[] | undefined;
+  currentUser?: { name: string; avatar: string; email?: string } | null;
+}
+
+const CommentSection = ({ blogId, currentUser }: CommentSectionProps) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
 
@@ -20,32 +29,37 @@ const CommentSection = ({ blogId, currentUser, postOwnerEmail }: CommentSectionP
     if (!newComment.trim()) return;
 
     const storedComments = JSON.parse(localStorage.getItem("comments") || "{}");
-    const blogComments = storedComments[blogId as string] || [];
+    const blogComments: Comment[] = storedComments[blogId as string] || [];
 
-    const newCommentData = {
-      id: Date.now(),
-      text: newComment,
-      author: currentUser?.name || "User",
-      avatar: currentUser?.avatar || "",
-      email: currentUser?.email || "",
-      createdAt: new Date().toISOString(),
-    };
+    const updatedComments = [
+      ...blogComments,
+      {
+        id: Date.now(),
+        text: newComment,
+        author: currentUser?.name || "User",
+        avatar: currentUser?.avatar || "",
+        createdAt: new Date().toISOString(),
+        email: currentUser?.email,
+      },
+    ];
 
-    const updatedComments = [...blogComments, newCommentData];
     storedComments[blogId as string] = updatedComments;
     localStorage.setItem("comments", JSON.stringify(storedComments));
     setComments(updatedComments);
     setNewComment("");
   };
 
-  const handleDeleteComment = (id: number) => {
-    const storedComments = JSON.parse(localStorage.getItem("comments") || "{}");
-    const blogComments = storedComments[blogId as string] || [];
-
-    const updatedComments = blogComments.filter((comment: Comment) => comment.id !== id);
-    storedComments[blogId as string] = updatedComments;
-    localStorage.setItem("comments", JSON.stringify(storedComments));
-    setComments(updatedComments);
+  const handleDeleteComment = (id: number, email: string | undefined) => {
+    if (currentUser?.email === email) {
+      const storedComments = JSON.parse(localStorage.getItem("comments") || "{}");
+      const blogComments: Comment[] = storedComments[blogId as string] || [];
+      const updatedComments = blogComments.filter((comment) => comment.id !== id);
+      storedComments[blogId as string] = updatedComments;
+      localStorage.setItem("comments", JSON.stringify(storedComments));
+      setComments(updatedComments);
+    } else {
+      alert("You can only delete your own comments.");
+    }
   };
 
   return (
@@ -53,10 +67,7 @@ const CommentSection = ({ blogId, currentUser, postOwnerEmail }: CommentSectionP
       <h2 className="text-2xl font-bold mb-4">Comments</h2>
       <div className="space-y-4">
         {comments.map((comment) => (
-          <div
-            key={comment.id}
-            className="bg-gray-100 p-4 rounded-lg shadow flex items-start space-x-4"
-          >
+          <div key={comment.id} className="bg-gray-100 p-4 rounded-lg shadow flex items-start">
             {comment.avatar && (
               <Image
                 src={comment.avatar || "/default-avatar.png"}
@@ -66,21 +77,21 @@ const CommentSection = ({ blogId, currentUser, postOwnerEmail }: CommentSectionP
                 className="rounded-full"
               />
             )}
-            <div className="flex-grow">
+            <div className="ml-4">
               <p className="font-medium">{comment.author}</p>
               <p className="text-gray-700">{comment.text}</p>
               <p className="text-sm text-gray-500 mt-1">
                 {new Date(comment.createdAt).toLocaleString()}
               </p>
+              {(currentUser?.email === comment.email) && (
+                <button
+                  className="text-red-500 mt-2"
+                  onClick={() => handleDeleteComment(comment.id, comment.email)}
+                >
+                  Delete
+                </button>
+              )}
             </div>
-            {(currentUser?.email === comment.email || currentUser?.email === postOwnerEmail) && (
-              <button
-                onClick={() => handleDeleteComment(comment.id)}
-                className="text-red-500 hover:underline"
-              >
-                Delete
-              </button>
-            )}
           </div>
         ))}
       </div>
