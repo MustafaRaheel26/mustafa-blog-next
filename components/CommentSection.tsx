@@ -1,20 +1,13 @@
 import { useState, useEffect } from "react";
-import Image from 'next/image';
+import Image from "next/image";
 
 interface CommentSectionProps {
   blogId: string | string[] | undefined;
-  currentUser?: { name: string; avatar: string } | null;
+  currentUser?: { name: string; avatar: string; email: string } | null;
+  postOwnerEmail?: string; // Post owner's email to allow comment deletion
 }
 
-interface Comment {
-  id: number;
-  text: string;
-  author: string;
-  avatar: string;
-  createdAt: string;
-}
-
-const CommentSection = ({ blogId, currentUser }: CommentSectionProps) => {
+const CommentSection = ({ blogId, currentUser, postOwnerEmail }: CommentSectionProps) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
 
@@ -29,21 +22,30 @@ const CommentSection = ({ blogId, currentUser }: CommentSectionProps) => {
     const storedComments = JSON.parse(localStorage.getItem("comments") || "{}");
     const blogComments = storedComments[blogId as string] || [];
 
-    const updatedComments = [
-      ...blogComments,
-      {
-        id: Date.now(),
-        text: newComment,
-        author: currentUser?.name || "User",
-        avatar: currentUser?.avatar || "",
-        createdAt: new Date().toISOString(),
-      },
-    ];
+    const newCommentData = {
+      id: Date.now(),
+      text: newComment,
+      author: currentUser?.name || "User",
+      avatar: currentUser?.avatar || "",
+      email: currentUser?.email || "",
+      createdAt: new Date().toISOString(),
+    };
 
+    const updatedComments = [...blogComments, newCommentData];
     storedComments[blogId as string] = updatedComments;
     localStorage.setItem("comments", JSON.stringify(storedComments));
     setComments(updatedComments);
     setNewComment("");
+  };
+
+  const handleDeleteComment = (id: number) => {
+    const storedComments = JSON.parse(localStorage.getItem("comments") || "{}");
+    const blogComments = storedComments[blogId as string] || [];
+
+    const updatedComments = blogComments.filter((comment: Comment) => comment.id !== id);
+    storedComments[blogId as string] = updatedComments;
+    localStorage.setItem("comments", JSON.stringify(storedComments));
+    setComments(updatedComments);
   };
 
   return (
@@ -53,7 +55,7 @@ const CommentSection = ({ blogId, currentUser }: CommentSectionProps) => {
         {comments.map((comment) => (
           <div
             key={comment.id}
-            className="bg-gray-100 p-4 rounded-lg shadow flex items-start"
+            className="bg-gray-100 p-4 rounded-lg shadow flex items-start space-x-4"
           >
             {comment.avatar && (
               <Image
@@ -64,13 +66,21 @@ const CommentSection = ({ blogId, currentUser }: CommentSectionProps) => {
                 className="rounded-full"
               />
             )}
-            <div>
+            <div className="flex-grow">
               <p className="font-medium">{comment.author}</p>
               <p className="text-gray-700">{comment.text}</p>
               <p className="text-sm text-gray-500 mt-1">
                 {new Date(comment.createdAt).toLocaleString()}
               </p>
             </div>
+            {(currentUser?.email === comment.email || currentUser?.email === postOwnerEmail) && (
+              <button
+                onClick={() => handleDeleteComment(comment.id)}
+                className="text-red-500 hover:underline"
+              >
+                Delete
+              </button>
+            )}
           </div>
         ))}
       </div>
