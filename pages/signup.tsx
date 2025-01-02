@@ -2,19 +2,26 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import { useUser } from "../context/UserContext";
 
+interface User {
+  name: string;
+  email: string;
+  password: string;
+  avatar: string;
+}
+
 const Signup = () => {
   const router = useRouter();
   const { setCurrentUser } = useUser();
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [avatar, setAvatar] = useState("");
+  const [name, setName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [avatar, setAvatar] = useState<string>("");
 
   const handleSignup = () => {
     // Check if user already exists
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const userExists = users.some((user: any) => user.email === email);
+    const users: User[] = JSON.parse(localStorage.getItem("users") || "[]");
+    const userExists = users.some((user: User) => user.email === email);
 
     if (userExists) {
       alert("Email is already registered! Please use a different email.");
@@ -27,7 +34,12 @@ const Signup = () => {
     }
 
     // Create a new user
-    const newUser = { name, email, password, avatar: avatar || "/default-avatar.png" };
+    const newUser: User = {
+      name,
+      email,
+      password,
+      avatar: avatar || "/default-avatar.png",
+    };
     const updatedUsers = [...users, newUser];
     localStorage.setItem("users", JSON.stringify(updatedUsers));
 
