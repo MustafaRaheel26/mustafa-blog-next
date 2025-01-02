@@ -5,19 +5,17 @@ interface BlogPost {
   title: string;
   content: string;
   author: string;
-  email: string; // Add this to match blog post data structure
+  email: string;
 }
 
 const Home = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
 
   useEffect(() => {
-    // Ensure this code only runs in the browser
-    if (typeof window !== "undefined") {
-      const storedPosts = JSON.parse(localStorage.getItem("posts") || "[]") as BlogPost[];
-      console.log("Posts from localStorage:", storedPosts); // Debugging log
-      setPosts(storedPosts);
-    }
+    // Fetch posts from localStorage
+    const storedPosts = JSON.parse(localStorage.getItem("posts") || "[]");
+    console.log("Posts from localStorage:", storedPosts); // Debugging
+    setPosts(storedPosts);
   }, []);
 
   return (
