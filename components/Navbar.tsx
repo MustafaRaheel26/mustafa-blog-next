@@ -1,8 +1,7 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import Image from 'next/image';
+import Image from "next/image";
 
-// Define the structure of the user object
 interface User {
   name: string;
   avatar: string;
@@ -10,18 +9,18 @@ interface User {
 
 const Navbar = () => {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<User | null>(null); // Updated state type
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
+    // Fetch currentUser from localStorage on initial render
     const user = JSON.parse(localStorage.getItem("currentUser") || "null");
-    // Check if the user is not null before setting the state
-    if (user) {
-      setCurrentUser(user);
-    }
+    setCurrentUser(user);
   }, []);
 
   const handleLogout = () => {
+    // Remove user from localStorage and update state
     localStorage.removeItem("currentUser");
+    setCurrentUser(null); // Update state to trigger re-render
     alert("Logged out successfully!");
     router.push("/login");
   };
@@ -62,11 +61,11 @@ const Navbar = () => {
                 onClick={goToDashboard}
               >
                 <Image
-                  src={currentUser?.avatar || "/default-avatar.png"}
-                  alt={currentUser?.name || "Default Avatar"}
+                  src={currentUser.avatar || "/default-avatar.png"}
+                  alt={currentUser.name || "Default Avatar"}
                   width={32}
                   height={32}
-                  className="rounded-full mr-2"
+                  className="rounded-full"
                 />
                 <span className="font-medium">{currentUser.name}</span>
               </div>
