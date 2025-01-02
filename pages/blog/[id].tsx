@@ -11,7 +11,7 @@ interface BlogPost {
   author: string;
 }
 
-const BlogPostPage = () => {
+const BlogDetails = () => {
   const router = useRouter();
   const { id } = router.query;
   const { currentUser } = useUser();
@@ -44,4 +44,4 @@ const BlogPostPage = () => {
   );
 };
 
-export default BlogPostPage;
+export default BlogDetails;
