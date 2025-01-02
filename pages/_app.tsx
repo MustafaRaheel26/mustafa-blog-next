@@ -1,16 +1,11 @@
-import '../styles/globals.css';
-import type { AppProps } from 'next/app';
-import Navbar from '../components/Navbar';
+import "../styles/globals.css";
+import type { AppProps } from "next/app";
+import { UserProvider } from "../context/UserContext";
 
-function MyApp({ Component, pageProps }: AppProps) {
+export default function App({ Component, pageProps }: AppProps) {
   return (
-    <>
-      <Navbar />
-      <div className="pt-16"> {/* Add padding to avoid overlapping with fixed Navbar */}
-        <Component {...pageProps} />
-      </div>
-    </>
+    <UserProvider>
+      <Component {...pageProps} />
+    </UserProvider>
   );
 }
-
-export default MyApp;

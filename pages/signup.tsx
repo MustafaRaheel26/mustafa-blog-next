@@ -1,87 +1,115 @@
-import { useState } from 'react';
-import { useRouter } from 'next/router';
-
-interface Blog {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: string;
-}
-
-interface User {
-  name: string;
-  email: string;
-  password: string;
-  avatar: string;
-  blogs: Blog[]; // Define a proper type for blogs.
-}
+import { useRouter } from "next/router";
+import { useState } from "react";
+import { useUser } from "../context/UserContext";
 
 const Signup = () => {
   const router = useRouter();
-  const [name, setName] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [avatar, setAvatar] = useState<string>('');
-  const [error, setError] = useState<string>('');
+  const { setCurrentUser } = useUser();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [avatar, setAvatar] = useState("");
 
   const handleSignup = () => {
-    if (!name || !email || !password || !avatar) {
-      setError('Please fill in all fields.');
+    // Check if user already exists
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const userExists = users.some((user: any) => user.email === email);
+
+    if (userExists) {
+      alert("Email is already registered! Please use a different email.");
       return;
     }
 
-    const users: User[] = JSON.parse(localStorage.getItem('users') || '[]');
-
-    if (users.some((user) => user.email === email)) {
-      setError('Email already registered. Please log in.');
+    if (!name || !email || !password) {
+      alert("Please fill in all required fields.");
       return;
     }
 
-    const newUser: User = { name, email, password, avatar, blogs: [] };
-    localStorage.setItem('users', JSON.stringify([...users, newUser]));
-    alert('Signup successful! Please log in.');
-    router.push('/login');
+    // Create a new user
+    const newUser = { name, email, password, avatar: avatar || "/default-avatar.png" };
+    const updatedUsers = [...users, newUser];
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+
+    // Set the new user as the current user
+    localStorage.setItem("currentUser", JSON.stringify(newUser));
+    setCurrentUser(newUser); // Update context
+
+    alert("Signup successful!");
+    router.push("/");
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-6 rounded shadow-lg max-w-sm w-full">
-        <h1 className="text-2xl font-bold mb-4 text-center">Signup</h1>
-        {error && <p className="text-red-500 mb-2">{error}</p>}
-        <input
-          type="text"
-          placeholder="Name"
-          className="w-full p-2 border rounded mb-2"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full p-2 border rounded mb-2"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full p-2 border rounded mb-2"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Avatar URL"
-          className="w-full p-2 border rounded mb-2"
-          value={avatar}
-          onChange={(e) => setAvatar(e.target.value)}
-        />
+      <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-6 text-center">Signup</h1>
+        <div className="mb-4">
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+            Name
+          </label>
+          <input
+            type="text"
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full p-2 mt-1 border rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            placeholder="Enter your name"
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            Email
+          </label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-2 mt-1 border rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            placeholder="Enter your email"
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            Password
+          </label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 mt-1 border rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            placeholder="Enter your password"
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="avatar" className="block text-sm font-medium text-gray-700">
+            Avatar URL (Optional)
+          </label>
+          <input
+            type="url"
+            id="avatar"
+            value={avatar}
+            onChange={(e) => setAvatar(e.target.value)}
+            className="w-full p-2 mt-1 border rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            placeholder="Enter a link to your avatar"
+          />
+        </div>
         <button
           onClick={handleSignup}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+          className="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700"
         >
           Signup
         </button>
+        <p className="mt-4 text-sm text-center">
+          Already have an account?{" "}
+          <span
+            onClick={() => router.push("/login")}
+            className="text-blue-600 cursor-pointer hover:underline"
+          >
+            Login here
+          </span>
+        </p>
       </div>
     </div>
   );

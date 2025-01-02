@@ -1,26 +1,14 @@
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
 import Image from "next/image";
-
-interface User {
-  name: string;
-  avatar: string;
-}
+import { useUser } from "../context/UserContext";
 
 const Navbar = () => {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    // Fetch currentUser from localStorage on initial render
-    const user = JSON.parse(localStorage.getItem("currentUser") || "null");
-    setCurrentUser(user);
-  }, []);
+  const { currentUser, setCurrentUser } = useUser();
 
   const handleLogout = () => {
-    // Remove user from localStorage and update state
     localStorage.removeItem("currentUser");
-    setCurrentUser(null); // Update state to trigger re-render
+    setCurrentUser(null); // Update context
     alert("Logged out successfully!");
     router.push("/login");
   };
